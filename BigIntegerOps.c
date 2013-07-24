@@ -105,9 +105,10 @@ char* bigIntAbs(const char* const bigInt, const int length, int* targetLength)
 	} ///- || + treat as zero;
 
 	//since we have checked the sanity, just copy the numbers;
-	char* ret = (char*) malloc(length - i + 1);
-	memset(ret, 0, length - i + 1);
-	memcpy(ret, bigInt + i, length - i + 1);
+	*targetLength = length - i;
+	char* ret = (char*) malloc(*targetLength);
+	memset(ret, 0, *targetLength);
+	memcpy(ret, bigInt + i, *targetLength);
 	return ret;
 }
 
@@ -160,10 +161,10 @@ int isPossitive(const char* const bigInt, const int length)
 	if(bigInt[0] == '+')
 		return 0;
 	
-	if(bigInt[0] == '0')
+	if(bigInt[0] != '-')
 	{
 		int i;
-		for(i = 1; i < length; ++i)
+		for(i = 0; i < length; ++i)
 		{
 			if(bigInt[i] != '0')
 				break;
@@ -179,7 +180,7 @@ int isPossitive(const char* const bigInt, const int length)
 char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen)
 {
 	char res[SIZE_MAX] = {0};
-	if(!isInteger(lhs, lhsLength) || !isInteger(rhs, rhsLength))
+	if(0 != isInteger(lhs, lhsLength) || 0 != isInteger(rhs, rhsLength))
 	{
 		*resultLen = 0;
 		return NULL;
@@ -206,7 +207,7 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 
 	--newLhsLen;
 	--newRhsLen;
-	while(index > 0 && newLhsLen > 0 && newRhsLen > 0)
+	while(index >= 0 && newLhsLen >= 0 && newRhsLen >= 0)
 	{
 		if(0 == op)
 			res[index] = carry + newLhs[newLhsLen] + newRhs[newRhsLen] - '0';
@@ -230,9 +231,9 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 		--newRhsLen;
 	}
 
-	if(newLhsLen > 0)
+	if(newRhsLen >= 0)
 	{///merge rhs 
-		while(newRhsLen > 0)
+		while(newRhsLen >= 0)
 		{
 			res[index] = carry + rhs[newRhsLen];
 			bitNum = res[index] - '0';
@@ -253,7 +254,7 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 	}
 	else
 	{///merge lhs
-		while(newLhsLen > 0)
+		while(newLhsLen >= 0)
 		{
 			res[index] = carry + lhs[newLhsLen];
 			bitNum = res[index] - '0';
@@ -285,7 +286,7 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 		else resultSymbol = -1;
 	}
 
-	*resultLen = SIZE_MAX - index + (resultSymbol == 0 ? 0 : 1);
+	*resultLen = SIZE_MAX - index + 1 + (resultSymbol == 0 ? 0 : 1);
 	char* result = (char*) malloc(*resultLen);
 	if(!result) 
 	{
@@ -296,8 +297,11 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 	}
 	memset(result, 0, *resultLen);	
 	if(resultSymbol == -1)
+	{
 		result[0] = '-';
-	memcpy(result + 1, res + index, *resultLen);
+		memcpy(result + 1, res + index + 1, *resultLen - 1);
+	}else
+		memcpy(result, res + index + 1, *resultLen);
 	return result;
 }
 
