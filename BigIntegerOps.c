@@ -10,22 +10,23 @@ int isInteger(const char* const bigInt, const int length)
 	//-1234
 	//+1234
 	//0001234
-	//^[0]+ [-|+][0-9]
-	
-	if(NULL == bigInt || 0 >= length) return -1;
+	//^[0]+ [-|+][0-9]+
+	if(NULL == bigInt || length <= 0) return -1;
 	//get the first non-zero position
+	int intLen = bigInt[length - 1] == '\0' ? length - 1 : length;//only tailing '\0' is allowed
+
 	int i = 0;
-	for(; i < length; ++i)
+	for(; i < intLen; ++i)
 	{
 		if(bigInt[i] != '0')
 			break;
 	}
 
-	if(i >= length) return 0; ///zero
+	if(i >= intLen) return 0; ///zero
 	
 	if(bigInt[i] == '-' || bigInt[i] == '+') ++i;
-	if(i >= length) return 0; ///- || + treat as zero
-	for(; i< length; ++i)
+	if(i >= intLen) return 0; ///- || + treat as zero
+	for(; i< intLen; ++i)
 	{
 		if(bigInt[i] < '0' || bigInt[i] > '9')
 			return -1;
@@ -37,26 +38,28 @@ int isZero(const char* const bigInt, const int length)
 {
 	if(NULL == bigInt || 0 >= length) return -1;
 	//get the first non-zero position
+	int intLen = bigInt[length - 1] == '\0' ? length - 1 : length;//only tailing '\0' is allowed
+
 	int i = 0;
-	for( ; i < length; ++i)
+	for( ; i < intLen; ++i)
 	{
 		if(bigInt[i] != '0')
 			break;
 	}
 
-	if(i >= length) return 0; ///zero
+	if(i >= intLen) return 0; ///zero
 	
 	if(bigInt[i] == '-' || bigInt[i] == '+') ++i;
 
-	if(i >= length) return 0; 
+	if(i >= intLen) return 0; 
 	////0000[-+]00000
-	for( ; i < length; ++i)
+	for( ; i < intLen; ++i)
 	{
 		if(bigInt[i] != '0')
 			break;
 	}
 
-	if(i < length)
+	if(i < intLen)
 	   	return -1;
 	else
 	   	return 0;
@@ -64,51 +67,58 @@ int isZero(const char* const bigInt, const int length)
 	
 char* bigIntAbs(const char* const bigInt, const int length, int* targetLength)
 {
+	//if bigInt is not tailing with '\0', manually add it
 	if(0 != isInteger(bigInt, length)) 
 	{
 		*targetLength = 0;
 		return NULL;
 	}
 	//return the pure integer part
+	int intLen = bigInt[length - 1] == '\0' ? length - 1 : length;
+
 	int i = 0;
-	for(; i < length; ++i)
+	for(; i < intLen; ++i)
 	{
 		if(bigInt[i] != '0')
 			break;
 	}
 
-	if(i >= length)
+	if(i >= intLen)
 	{
-		char* ret = (char*) malloc(1);
+		char* ret = (char*) malloc(2);
 		if(ret == NULL)
 		{
 			printf("unable to allocate more memory");
+			*targetLength = 0;
 			return NULL;
 		}
 		ret[0] = '0';
-		*targetLength = 1;
+		ret[1] = '\0';
+		*targetLength = 2;
 		return ret;
 	} ///zero
 	
 	if(bigInt[i] == '-' || bigInt[i] == '+') ++i;
-	if(i >= length) 
+	if(i >= intLen) 
 	{
-		char* ret = (char*) malloc(1);
+		char* ret = (char*) malloc(2);
 		if(NULL == ret)
 		{
 			printf("unable to allocate more memory");
 			return NULL;
 		}
 		ret[0] = '0';
-		*targetLength = 1;
+		ret[1] = '\0';
+		*targetLength = 2;
 		return ret;
 	} ///- || + treat as zero;
 
 	//since we have checked the sanity, just copy the numbers;
-	*targetLength = length - i;
+	*targetLength = intLen - i + 1;
 	char* ret = (char*) malloc(*targetLength);
 	memset(ret, 0, *targetLength);
-	memcpy(ret, bigInt + i, *targetLength);
+	memcpy(ret, bigInt + i, *targetLength - 1);
+	ret[*targetLength - 1] = '\0';//cool
 	return ret;
 }
 
@@ -164,7 +174,9 @@ int isPossitive(const char* const bigInt, const int length)
 	if(bigInt[0] != '-')
 	{
 		int i;
-		for(i = 0; i < length; ++i)
+		int intLen = bigInt[length - 1] == '\0' ? length - 1 : length;
+		
+		for(i = 0; i < intLen; ++i)
 		{
 			if(bigInt[i] != '0')
 				break;
@@ -175,6 +187,45 @@ int isPossitive(const char* const bigInt, const int length)
 	}
 
 	return -1;
+}
+
+char* getOppositeNumber(const char* const bigInt, const int length, int* resultLen)
+{
+	if(isZero(bigInt, length) == 0)
+	{
+		char* result = (char*) malloc(2);
+		if(result == NULL)
+		{
+			printf("unable to alloc more memory");
+			*resultLen = 0;
+			return NULL;
+		}
+		*resultLen = 2;
+		result[0] = '0';
+		result[1] = '\0';
+	}
+
+	int possitive = isPossitive(bigInt, length);
+	int absLen = 0;
+	char* absInt = bigIntAbs(bigInt, length, &absLen);
+	if(possitive == 0)
+	{
+		char* result = (char*) malloc(absLen + 1);
+		if(result == NULL)
+		{	
+			printf("unable to alloc more memory");
+			*resultLen = 0;
+			return NULL;
+		}
+		*resultLen = absLen + 1;
+		result[0] = '-';
+		memcpy(result + 1, bigInt, absLen);
+		free(absInt);
+		return result;
+	}else
+	{
+		return absInt;
+	}
 }
 
 char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen)
@@ -198,6 +249,7 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 	if(!newRhs || 0 == newRhsLen)
 	{
 		free(newLhs);
+		*resultLen = 0;
 		return NULL;
 	}
 
@@ -205,14 +257,15 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 	int carry = 0, bitNum = 0;
 	int op = ((possitiveRhs == 0 && possitiveLhs == -1) || (possitiveLhs == 0 && possitiveRhs == -1)) ? -1 : 0;//-1 means minus, and 0 mean add
 
-	--newLhsLen;
-	--newRhsLen;
+	newLhsLen -= 2;///considering tailing '\0'
+	newRhsLen -= 2;
+
 	while(index >= 0 && newLhsLen >= 0 && newRhsLen >= 0)
 	{
 		if(0 == op)
 			res[index] = carry + newLhs[newLhsLen] + newRhs[newRhsLen] - '0';
 		else
-			res[index] = carry + newLhs[newLhsLen] - newRhs[newRhsLen] - '0';
+			res[index] = carry + newLhs[newLhsLen] - newRhs[newRhsLen] + '0';
 		bitNum = res[index] - '0';
 		if(bitNum >= 0)
 		{
@@ -293,6 +346,7 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 		printf("unable to mallocate memory");
 		free(newLhs);
 		free(newRhs);
+		*resultLen = 0;
 		return NULL;
 	}
 	memset(result, 0, *resultLen);	
@@ -302,13 +356,55 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 		memcpy(result + 1, res + index + 1, *resultLen - 1);
 	}else
 		memcpy(result, res + index + 1, *resultLen);
+	result[*resultLen - 1] = '\0';
 	return result;
 }
 
 char* bigIntSub(char* lhs, int lhsLength, char* rhs, int rhsLength, int* resultLen)
 {
+	if(0 != isInteger(lhs, lhsLength) || 0 != isInteger(rhs, rhsLength))
+	{
+		*resultLen = 0;
+		return NULL;
+	}
 
-	return NULL;
+	int oppositeRhsLen = 0;
+	char* oppositeRhs = getOppositeNumber(rhs, rhsLength, &oppositeRhsLen);
+	if(NULL == oppositeRhs)
+	{
+		printf("failed to get opposite number of rhs[%s]", rhs);
+		*resultLen = 0;
+		return NULL;
+	}
+
+	char* result = bigIntAdd(lhs, lhsLength, oppositeRhs, oppositeRhsLen, resultLen);
+	free(oppositeRhs);
+
+	return result;
+}
+
+char* bigIntMutiTenPow(const char* const bigInt, const int length, int powN, int* resultLen)
+{
+	//assume the integer is ended with '\0'
+	int targetLen = length + powN;
+	char* result = (char*) malloc(targetLen);
+	if(result == NULL)
+	{
+		printf("failed to allocate more memory");
+		*resultLen = 0;
+		return 0;
+	}
+	if(targetLen == length)//powN == 0
+		memcpy(result, bigInt, length);
+	else
+	{
+		memcpy(result, bigInt, length - 1);
+		memset(result + length -1, '0', targetLen - length);
+	    result[targetLen - 1] = '\0';	
+	}
+	
+	*resultLen = targetLen;
+	return result;
 }
 
 char* bigIntMultiple(char* lhs, int lhsLength, char* rhs, int rhsLength, int* resultLen)

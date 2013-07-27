@@ -6,49 +6,51 @@
 int main(void)
 {
 
-	char a[3] = {'1','2','3'};
-	char b[1] = {'2'};
-	char c[5] = {'-', '1', '2', '3', '4'};
-	char d[3] = {'+', '1', '2'};
+	char a[4] = {'1','2','3', '\0'};
+	char b[2] = {'2', '\0'};
+	char c[6] = {'-', '1', '2', '3', '4', '\0'};
+	char d[4] = {'+', '1', '2', '\0'};
 
 	int resultLen = 0;
 
-	if(isInteger(a, 3) == 0) 
+	bigIntMutiTenPow(a, 4, 2, &resultLen);
+
+	if(isInteger(a, 4) == 0) 
 		printf("a[%s] is an integer\n", a);
 	else
 		printf("sanity check failed");
 
-	if(isInteger(c, 5) == 0)
+	if(isInteger(c, 2) == 0)
 		printf("c[%s] is an integer\n", c);
 	else
 		printf("c[%s] sanity check failed", c);
 
-	if(isInteger(d, 3) == 0)
+	if(isInteger(d, 4) == 0)
 		printf("d[%s] is an integer\n", d);
 	else
 		printf("d failed to sanity check");
 
-	if(isZero(a, 3) != 0)
+	if(isZero(a, 4) != 0)
 		printf("a is not zero\n");
 
-	if(isZero(c, 5) != 0)
+	if(isZero(c, 6) != 0)
 		printf("c is not a zero number\n");
-	if(isZero(d, 3) != 0)
+	if(isZero(d, 4) != 0)
 		printf("d is not a zero number\n");
 
-	if(isPossitive(a, 3) == 0)
+	if(isPossitive(a, 4) == 0)
 		printf("a is a possitive value\n");
 	else
 		printf("a should be a possitive value\n");
 
-	if(isPossitive(d, 3) == 0)
+	if(isPossitive(d, 4) == 0)
 		printf("d is a possitive value\n");
 	else
 		printf("d should be a possitive value\n");
 
 
 	int res1 = 0;
-	char* absA = bigIntAbs(a, 3, &res1);
+	char* absA = bigIntAbs(a, 4, &res1);
 	if(absA == NULL || res1 == 0)
 		printf("unable to get A's abs\n");
 	else

@@ -22,6 +22,30 @@ START_TEST(test_isInteger)
 }
 END_TEST
 
+START_TEST(test_integerMutiTenPow)
+{
+	char a[3] = {'1','2', '\0'};
+	char b[3] = {'-', '1', '\0'};
+
+	int len = 0;
+	char* res1 = bigIntMutiTenPow(a, 3, 2, &len);
+	fail_unless(res1 != NULL, "result should not null");
+	fail_unless(strcmp(res1, "1200") == 0, "result should == 1200");
+	free(res1);
+
+	char* res2 = bigIntMutiTenPow(b, 3, 2, &len);
+	fail_unless(res2 != NULL, "result should == -100");
+	fail_unless(strcmp(res2, "-100") == 0, "result should == -100");
+	free(res2);
+
+	char* res3 = bigIntMutiTenPow(a, 3, 0, &len);
+	fail_unless(res3 != NULL, "result should == 12");
+	fail_unless(strcmp(res3, "12") == 0, "result should == 12");
+	free(res3);
+}
+END_TEST
+
+
 Suite* bigInteger_suit(void)
 {
 	Suite *s = suite_create("Test_BigInteger");
@@ -30,6 +54,7 @@ Suite* bigInteger_suit(void)
 	TCase *tc_core = tcase_create("Core");
 	tcase_add_checked_fixture(tc_core, setup, teardown);
 	tcase_add_test(tc_core, test_isInteger);
+	tcase_add_test(tc_core, test_integerMutiTenPow);
 
 	suite_add_tcase(s, tc_core);
 
