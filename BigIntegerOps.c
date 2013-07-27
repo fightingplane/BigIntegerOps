@@ -62,6 +62,16 @@ int isZero(const char* const bigInt, const int length)
 	   	return 0;
 }
 	
+char* getIntZero()
+{
+	char* ret = (char*) malloc(2);
+	if(ret == NULL)
+		return NULL;
+	ret[0] = '0';
+	ret[1] = '\0';
+	return ret;
+}
+
 char* bigIntAbs(const char* const bigInt, const int length, int* targetLength)
 {
 	//if bigInt is not tailing with '\0', manually add it
@@ -71,47 +81,29 @@ char* bigIntAbs(const char* const bigInt, const int length, int* targetLength)
 		return NULL;
 	}
 	//return the pure integer part
-	int intLen = bigInt[length - 1] == '\0' ? length - 1 : length;
 
 	int i = 0;
-	for(; i < intLen; ++i)
+	for(; i < length; ++i)
 	{
 		if(bigInt[i] != '0')
 			break;
 	}
 
-	if(i >= intLen)
+	if(i >= length)
 	{
-		char* ret = (char*) malloc(2);
-		if(ret == NULL)
-		{
-			printf("unable to allocate more memory");
-			*targetLength = 0;
-			return NULL;
-		}
-		ret[0] = '0';
-		ret[1] = '\0';
 		*targetLength = 1;
-		return ret;
+		return getIntZero();
 	} ///zero
 	
 	if(bigInt[i] == '-' || bigInt[i] == '+') ++i;
-	if(i >= intLen) 
+	if(i >= length) 
 	{
-		char* ret = (char*) malloc(2);
-		if(NULL == ret)
-		{
-			printf("unable to allocate more memory");
-			return NULL;
-		}
-		ret[0] = '0';
-		ret[1] = '\0';
 		*targetLength = 1;
-		return ret;
+		return getIntZero();
 	} ///- || + treat as zero;
 
 	//since we have checked the sanity, just copy the numbers;
-	*targetLength = intLen - i;
+	*targetLength = length - i;
 	char* ret = (char*) malloc(*targetLength + 1);//add an extra space for '\0'
 	memset(ret, 0, *targetLength);
 	memcpy(ret, bigInt + i, *targetLength);
@@ -171,13 +163,15 @@ int isPossitive(const char* const bigInt, const int length)
 	if(bigInt[0] != '-')
 	{
 		int i;
-		int intLen = bigInt[length - 1] == '\0' ? length - 1 : length;
 		
-		for(i = 0; i < intLen; ++i)
+		for(i = 0; i < length; ++i)
 		{
 			if(bigInt[i] != '0')
 				break;
 		}
+
+		if(i >= length)
+			return 0;//zero
 
 		if(bigInt[i] == '+' || (bigInt[i] >= '1' && bigInt[i] <= '9'))
 			return 0;
@@ -190,16 +184,8 @@ char* getOppositeNumber(const char* const bigInt, const int length, int* resultL
 {
 	if(isZero(bigInt, length) == 0)
 	{
-		char* result = (char*) malloc(2);
-		if(result == NULL)
-		{
-			printf("unable to alloc more memory");
-			*resultLen = 0;
-			return NULL;
-		}
-		*resultLen = 2;
-		result[0] = '0';
-		result[1] = '\0';
+		*resultLen = 1;
+		return getIntZero();
 	}
 
 	int possitive = isPossitive(bigInt, length);
@@ -217,6 +203,7 @@ char* getOppositeNumber(const char* const bigInt, const int length, int* resultL
 		*resultLen = absLen + 1;
 		result[0] = '-';
 		memcpy(result + 1, bigInt, absLen);
+		result[absLen] = '\0';
 		free(absInt);
 		return result;
 	}else
@@ -254,8 +241,8 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 	int carry = 0, bitNum = 0;
 	int op = ((possitiveRhs == 0 && possitiveLhs == -1) || (possitiveLhs == 0 && possitiveRhs == -1)) ? -1 : 0;//-1 means minus, and 0 mean add
 
-	newLhsLen -= 2;///considering tailing '\0'
-	newRhsLen -= 2;
+	--newLhsLen;
+	--newRhsLen;
 
 	while(index >= 0 && newLhsLen >= 0 && newRhsLen >= 0)
 	{
@@ -285,7 +272,7 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 	{///merge rhs 
 		while(newRhsLen >= 0)
 		{
-			res[index] = carry + rhs[newRhsLen];
+			res[index] = carry + newRhs[newRhsLen];
 			bitNum = res[index] - '0';
 			if(bitNum >= 0)
 			{
@@ -306,7 +293,7 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 	{///merge lhs
 		while(newLhsLen >= 0)
 		{
-			res[index] = carry + lhs[newLhsLen];
+			res[index] = carry + newLhs[newLhsLen];
 			bitNum = res[index] - '0';
 			if(bitNum >= 0)
 			{
@@ -324,7 +311,9 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 		}
 	}
 
-	res[index] = '0' + abs(carry);//add carry
+	if(carry != 0)
+		res[index--] = '0' + abs(carry);//add carry
+
 	int resultSymbol = 0;
 	if(possitiveLhs == -1 && possitiveRhs == -1)
 		resultSymbol = -1;
@@ -336,8 +325,8 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 		else resultSymbol = -1;
 	}
 
-	*resultLen = SIZE_MAX - index + 1 + (resultSymbol == 0 ? 0 : 1);
-	char* result = (char*) malloc(*resultLen);
+	*resultLen = SIZE_MAX - (index + 1) + (resultSymbol == 0 ? 0 : 1);//index catch up
+	char* result = (char*) malloc(*resultLen + 1);
 	if(!result) 
 	{
 		printf("unable to mallocate memory");
@@ -346,14 +335,14 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 		*resultLen = 0;
 		return NULL;
 	}
-	memset(result, 0, *resultLen);	
+	memset(result, 0, *resultLen + 1);	
 	if(resultSymbol == -1)
 	{
 		result[0] = '-';
 		memcpy(result + 1, res + index + 1, *resultLen - 1);
 	}else
 		memcpy(result, res + index + 1, *resultLen);
-	result[*resultLen - 1] = '\0';
+	result[*resultLen] = '\0';
 	return result;
 }
 
@@ -384,7 +373,7 @@ char* bigIntMutiTenPow(const char* const bigInt, const int length, int powN, int
 {
 	//assume the integer is ended with '\0'
 	int targetLen = length + powN;
-	char* result = (char*) malloc(targetLen);
+	char* result = (char*) malloc(targetLen + 1);
 	if(result == NULL)
 	{
 		printf("failed to allocate more memory");
@@ -395,18 +384,18 @@ char* bigIntMutiTenPow(const char* const bigInt, const int length, int powN, int
 		memcpy(result, bigInt, length);
 	else
 	{
-		memcpy(result, bigInt, length - 1);
-		memset(result + length -1, '0', targetLen - length);
-	    result[targetLen - 1] = '\0';	
+		memcpy(result, bigInt, length);
+		memset(result + length, '0', targetLen - length);
 	}
 	
+	result[targetLen] = '\0';	
 	*resultLen = targetLen;
 	return result;
 }
 
 char* bigIntMultipleN(const char* const bigInt, const int length, const int n, int* resultLen)
 {
-	if(n < 0)
+	if(n < 0 || n > 10)
 	{
 		*resultLen = 0;
 	   	return NULL;
@@ -414,24 +403,13 @@ char* bigIntMultipleN(const char* const bigInt, const int length, const int n, i
 
 	if(isZero(bigInt, length) == 0 || n == 0)
 	{
-		char* result  = (char*) malloc(2);
-		if(result == NULL)
-		{
-			*resultLen = 0;
-			return NULL;
-		}
-		result[0] = '0';
-		result[1] = '\0';
-		*resultLen = 2;
-		return result;
+		*resultLen = 1;
+		return getIntZero();
 	}
 	
 	char tmp[SIZE_MAX] = {0};
 	int i = SIZE_MAX - 1;
 	int index = length -1;
-	if(bigInt[index] == '\0')
-		index = length - 2;
-
 	int carry = 0;
 	int test = 0;
 	while(index >= 0 && i >= 0)
@@ -447,15 +425,15 @@ char* bigIntMultipleN(const char* const bigInt, const int length, const int n, i
 	if(carry > 0)
 		tmp[i--] = '0' + carry;
 
-	*resultLen = SIZE_MAX - i;
-	char* result = (char*) malloc(*resultLen);
+	*resultLen = SIZE_MAX - i - 1;
+	char* result = (char*) malloc(*resultLen + 1);
 	if(result == NULL)
 	{
 		*resultLen = 0;
 		return NULL;
 	}
-	memcpy(result, tmp + i + 1, *resultLen - 1);
-	result[*resultLen - 1] = '\0';
+	memcpy(result, tmp + i + 1, *resultLen);
+	result[*resultLen] = '\0';
 	return result;
 }
 
@@ -463,18 +441,10 @@ char* bigIntMultiple(const char* const lhs, const int lhsLength, const char* con
 {
 	if(isZero(lhs, lhsLength) == 0 || isZero(rhs, rhsLength) == 0)
 	{
-		char* result = malloc(2);
-		if(result == NULL)
-		{
-			*resultLen = 0;
-			return NULL;
-		}
-		result = '0';
-		result = '\0';
 		*resultLen = 1;
-		return result;
+		return getIntZero();
 	}
-	
+
 	int possitiveLhs = isPossitive(lhs, lhsLength);
 	int possitiveRhs = isPossitive(rhs, rhsLength);
 	int resultPossitive = (possitiveLhs == 0 && possitiveRhs == 0) || (possitiveLhs == -1 && possitiveRhs == -1) ? 0 : -1; 
@@ -495,28 +465,110 @@ char* bigIntMultiple(const char* const lhs, const int lhsLength, const char* con
 		return NULL;
 	}
 
-	char result[SIZE_MAX] = {0};
+	char* result = getIntZero();
+	if(!result)
+	{
+		*resultLen = 0;
+		return NULL;
+	}
+	*resultLen = 1;
 	char* record[10];
 	//int record
 	int i = 0;
 	for(; i<10; ++i)
 		record[i] = NULL;
 
+	int n = 0;
+	int j = newRhsLen - 1;
+	int retCode = 0;
+	while(j >= 0)
+	{
+		n = absRhs[j] - '0';
+		if(n >= 0 && n <= 9)
+		{
+			if(record[n] == NULL)
+			{
+				int tmpLength = 0;
+				char* recordTmp = bigIntMultipleN(absLhs, newLhsLen, n, &tmpLength);
+				if(recordTmp != NULL)
+					record[n] = recordTmp;
+				else
+				{
+					retCode = -1;
+					break;//failed
+				}
+			}
 
+			int length = 0;
+			char* tmp = bigIntMutiTenPow(record[n], strlen(record[n]), newRhsLen - j - 1, &length);
+			if(tmp != NULL)
+			{
+				char* tmpRes = bigIntAdd(result, *resultLen, tmp, length, resultLen);
+				if(tmpRes != NULL)
+				{
+					free(result);
+					result = tmpRes;
+				}
+				else
+				{
+					retCode = -1;
+					break;
+				}
+			}
+			else
+			{
+				retCode = -1;
+				break;
+			}
 
+		}else
+		{
+			retCode = -1;
+			break;
+		}
+		--j;
+	}
 
 	for(i = 0; i<10; ++i)
 	{
 		if(record[i] != NULL)
 			free(record[i]);
 	}
+	if(retCode != 0)
+	{
+		if(result) free(result);
+		result = NULL;
+		*resultLen = 0;
+	}
 
-
-	return NULL;
+	
+	if(result != NULL && resultPossitive == -1)
+	{
+		char* resultOpposite = getOppositeNumber(result, *resultLen, resultLen);
+		if(resultOpposite)
+		{
+			free(result);
+			result = resultOpposite;
+		}else
+		{
+			free(result);
+			*resultLen = 0;
+			result = NULL;
+		}
+	}
+	return result;
 }
 
-char* bigIntDevide(char* lhs, int lhsLength, char* rhs, int rhsLength, int* resultLen)
+char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen)
 {
+/*
+ * 12345/12 = 1000 + 20 + 8 ...9
+ * = 1028 ...9
+ *which can extract to 
+ *  12345 - 1000*12 = 345
+ *  345 - 10*12*2 = 105
+ *  105 - 12*8 = 9
+ * ***/
 
 	return NULL;
 }

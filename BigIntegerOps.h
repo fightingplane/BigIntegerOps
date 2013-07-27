@@ -20,6 +20,9 @@ char* getOppositeNumber(const char* const bigInt, const int length, int* targetL
  * @warn assume the input integer should be a valid integer*/
 char* bigIntAbs(const char* const bigInt, const int length, int* targetLength);
 
+/**return the zero*/
+char* getIntZero();
+
 /**retrun the integer * 10^n
  * @warn assume the input integer is valid*/
 char* bigIntMutiTenPow(const char* const bigInt, const int length, int powN, int* resultLen);
@@ -47,12 +50,12 @@ char* bigIntMultipleN(const char* const lhs, const int lhsLength, const int N, i
 /**
  * return two big integers' multiple result, and put result length into resultLen
  * */
-char* bigIntMultiple(char* lhs, int lhsLength, char* rhs, int rhsLength, int* resultLen);
+char* bigIntMultiple(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen);
 
 /**
  * return two big integers' devision result, and put result length into resultLen
  * */
-char* bigIntDevide(char* lhs, int lhsLength, char* rhs, int rhsLength, int* resultLen);
+char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen);
 
 /**
  * return two big integers' mod result, and put result length into resultLen
