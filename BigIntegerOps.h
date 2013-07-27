@@ -39,8 +39,11 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 /**
  * return two big integers' substraction result, and put result length into resultLen
  * */
-char* bigIntSub(char* lhs, int lhsLength, char* rhs, int rhsLength, int* resultLen);
+char* bigIntSub(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen);
 
+/**return the result of the big integer * n( 0 <= n <=9 )
+ *@warn assume the big int is a absolute value */
+char* bigIntMultipleN(const char* const lhs, const int lhsLength, const int N, int* resultLen); 
 /**
  * return two big integers' multiple result, and put result length into resultLen
  * */

@@ -15,6 +15,8 @@ int main(void)
 
 	bigIntMutiTenPow(a, 4, 2, &resultLen);
 
+	char* e = "12";
+	bigIntMultipleN(e, strlen(e), 9, &resultLen);
 	if(isInteger(a, 4) == 0) 
 		printf("a[%s] is an integer\n", a);
 	else

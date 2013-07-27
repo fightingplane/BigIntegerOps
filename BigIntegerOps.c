@@ -13,20 +13,19 @@ int isInteger(const char* const bigInt, const int length)
 	//^[0]+ [-|+][0-9]+
 	if(NULL == bigInt || length <= 0) return -1;
 	//get the first non-zero position
-	int intLen = bigInt[length - 1] == '\0' ? length - 1 : length;//only tailing '\0' is allowed
 
 	int i = 0;
-	for(; i < intLen; ++i)
+	for(; i < length; ++i)
 	{
 		if(bigInt[i] != '0')
 			break;
 	}
 
-	if(i >= intLen) return 0; ///zero
+	if(i >= length) return 0; ///zero
 	
 	if(bigInt[i] == '-' || bigInt[i] == '+') ++i;
-	if(i >= intLen) return 0; ///- || + treat as zero
-	for(; i< intLen; ++i)
+	if(i >= length) return 0; ///- || + treat as zero
+	for(; i< length; ++i)
 	{
 		if(bigInt[i] < '0' || bigInt[i] > '9')
 			return -1;
@@ -36,30 +35,28 @@ int isInteger(const char* const bigInt, const int length)
 
 int isZero(const char* const bigInt, const int length)
 {
-	if(NULL == bigInt || 0 >= length) return -1;
+	if(NULL == bigInt || 0 <= length) return -1;
 	//get the first non-zero position
-	int intLen = bigInt[length - 1] == '\0' ? length - 1 : length;//only tailing '\0' is allowed
-
 	int i = 0;
-	for( ; i < intLen; ++i)
+	for( ; i < length; ++i)
 	{
 		if(bigInt[i] != '0')
 			break;
 	}
 
-	if(i >= intLen) return 0; ///zero
+	if(i >= length) return 0; ///zero
 	
 	if(bigInt[i] == '-' || bigInt[i] == '+') ++i;
 
-	if(i >= intLen) return 0; 
+	if(i >= length) return 0; 
 	////0000[-+]00000
-	for( ; i < intLen; ++i)
+	for( ; i < length; ++i)
 	{
 		if(bigInt[i] != '0')
 			break;
 	}
 
-	if(i < intLen)
+	if(i < length)
 	   	return -1;
 	else
 	   	return 0;
@@ -94,7 +91,7 @@ char* bigIntAbs(const char* const bigInt, const int length, int* targetLength)
 		}
 		ret[0] = '0';
 		ret[1] = '\0';
-		*targetLength = 2;
+		*targetLength = 1;
 		return ret;
 	} ///zero
 	
@@ -109,16 +106,16 @@ char* bigIntAbs(const char* const bigInt, const int length, int* targetLength)
 		}
 		ret[0] = '0';
 		ret[1] = '\0';
-		*targetLength = 2;
+		*targetLength = 1;
 		return ret;
 	} ///- || + treat as zero;
 
 	//since we have checked the sanity, just copy the numbers;
-	*targetLength = intLen - i + 1;
-	char* ret = (char*) malloc(*targetLength);
+	*targetLength = intLen - i;
+	char* ret = (char*) malloc(*targetLength + 1);//add an extra space for '\0'
 	memset(ret, 0, *targetLength);
-	memcpy(ret, bigInt + i, *targetLength - 1);
-	ret[*targetLength - 1] = '\0';//cool
+	memcpy(ret, bigInt + i, *targetLength);
+	ret[*targetLength] = '\0';//cool
 	return ret;
 }
 
@@ -360,7 +357,7 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 	return result;
 }
 
-char* bigIntSub(char* lhs, int lhsLength, char* rhs, int rhsLength, int* resultLen)
+char* bigIntSub(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen)
 {
 	if(0 != isInteger(lhs, lhsLength) || 0 != isInteger(rhs, rhsLength))
 	{
@@ -407,10 +404,115 @@ char* bigIntMutiTenPow(const char* const bigInt, const int length, int powN, int
 	return result;
 }
 
-char* bigIntMultiple(char* lhs, int lhsLength, char* rhs, int rhsLength, int* resultLen)
+char* bigIntMultipleN(const char* const bigInt, const int length, const int n, int* resultLen)
 {
-	return NULL;
+	if(n < 0)
+	{
+		*resultLen = 0;
+	   	return NULL;
+	}
 
+	if(isZero(bigInt, length) == 0 || n == 0)
+	{
+		char* result  = (char*) malloc(2);
+		if(result == NULL)
+		{
+			*resultLen = 0;
+			return NULL;
+		}
+		result[0] = '0';
+		result[1] = '\0';
+		*resultLen = 2;
+		return result;
+	}
+	
+	char tmp[SIZE_MAX] = {0};
+	int i = SIZE_MAX - 1;
+	int index = length -1;
+	if(bigInt[index] == '\0')
+		index = length - 2;
+
+	int carry = 0;
+	int test = 0;
+	while(index >= 0 && i >= 0)
+	{
+		test = (bigInt[index] - '0') * n + carry;
+		carry = test / 10;
+		tmp[i] = '0' + test%10;
+
+		--index;
+		--i;
+	}
+
+	if(carry > 0)
+		tmp[i--] = '0' + carry;
+
+	*resultLen = SIZE_MAX - i;
+	char* result = (char*) malloc(*resultLen);
+	if(result == NULL)
+	{
+		*resultLen = 0;
+		return NULL;
+	}
+	memcpy(result, tmp + i + 1, *resultLen - 1);
+	result[*resultLen - 1] = '\0';
+	return result;
+}
+
+char* bigIntMultiple(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen)
+{
+	if(isZero(lhs, lhsLength) == 0 || isZero(rhs, rhsLength) == 0)
+	{
+		char* result = malloc(2);
+		if(result == NULL)
+		{
+			*resultLen = 0;
+			return NULL;
+		}
+		result = '0';
+		result = '\0';
+		*resultLen = 1;
+		return result;
+	}
+	
+	int possitiveLhs = isPossitive(lhs, lhsLength);
+	int possitiveRhs = isPossitive(rhs, rhsLength);
+	int resultPossitive = (possitiveLhs == 0 && possitiveRhs == 0) || (possitiveLhs == -1 && possitiveRhs == -1) ? 0 : -1; 
+
+	int newLhsLen = 0;
+	int newRhsLen = 0;
+	char* absLhs = bigIntAbs(lhs, lhsLength, &newLhsLen);
+	if(absLhs == NULL)
+	{
+		*resultLen = 0;
+		return NULL;
+	}
+	char* absRhs = bigIntAbs(rhs, rhsLength, &newRhsLen);
+	if(absRhs == NULL)
+	{
+		free(absLhs);
+		*resultLen = 0;
+		return NULL;
+	}
+
+	char result[SIZE_MAX] = {0};
+	char* record[10];
+	//int record
+	int i = 0;
+	for(; i<10; ++i)
+		record[i] = NULL;
+
+
+
+
+	for(i = 0; i<10; ++i)
+	{
+		if(record[i] != NULL)
+			free(record[i]);
+	}
+
+
+	return NULL;
 }
 
 char* bigIntDevide(char* lhs, int lhsLength, char* rhs, int rhsLength, int* resultLen)

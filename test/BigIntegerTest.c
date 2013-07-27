@@ -45,6 +45,23 @@ START_TEST(test_integerMutiTenPow)
 }
 END_TEST
 
+START_TEST(test_integerMutiN)
+{
+	char *a = "12";
+	int len = 0;
+	char* res1 = bigIntMultipleN(a, strlen(a), 9, &len);
+	fail_unless(res1 != NULL, "result should not null");
+	fail_unless(strcmp(res1, "108") == 0, "result should == 108");
+	free(res1);
+	
+	char* res2 = bigIntMultipleN(a, strlen(a), 0, &len);
+	fail_unless(res2 != NULL, "result should not null");
+	fail_unless(strcmp(res2, "0") == 0, "result should == 0");
+	free(res2);
+
+}
+END_TEST
+
 
 Suite* bigInteger_suit(void)
 {
@@ -54,9 +71,13 @@ Suite* bigInteger_suit(void)
 	TCase *tc_core = tcase_create("Core");
 	tcase_add_checked_fixture(tc_core, setup, teardown);
 	tcase_add_test(tc_core, test_isInteger);
-	tcase_add_test(tc_core, test_integerMutiTenPow);
+
+	TCase *tc_calc = tcase_create("Calc");
+	tcase_add_test(tc_calc, test_integerMutiTenPow);
+	tcase_add_test(tc_calc, test_integerMutiN);
 
 	suite_add_tcase(s, tc_core);
+	suite_add_tcase(s, tc_calc);
 
 	return s;
 }
