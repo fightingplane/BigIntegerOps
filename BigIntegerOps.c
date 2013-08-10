@@ -180,6 +180,24 @@ int isPossitive(const char* const bigInt, const int length)
 	return -1;
 }
 
+char* bigIntCopy(const char* const bigInt, const int length, int* resultLen)
+{
+	*resultLen = 0;
+	if(bigInt == NULL || length == 0) 
+	{
+		return NULL;
+	}
+	char* res = (char*) malloc(length +1);
+	if(res == NULL)
+	{
+		return NULL;
+	}
+	memcpy(res, bigInt, length);
+	res[length] = '\0';
+	*resultLen = length;
+	return res;
+}
+
 char* getOppositeNumber(const char* const bigInt, const int length, int* resultLen)
 {
 	if(isZero(bigInt, length) == 0)
@@ -393,6 +411,26 @@ char* bigIntMutiTenPow(const char* const bigInt, const int length, int powN, int
 	return result;
 }
 
+char* bigIntDevideTen(const char* const bigInt, const int length, int* resultLen)
+{
+	if(isZero(bigInt, length) == 0 || length <= 1)
+	{
+		*resultLen = 1;
+		return getIntZero();
+	}
+
+	*resultLen = length - 1;
+	char* result = (char*) malloc(length);
+	if(result == NULL)
+	{
+		*resultLen = 1;
+		return NULL;
+	}
+	memcpy(result, bigInt, length -1);
+	result[length] = '\0';
+	return result;
+}
+
 char* bigIntMultipleN(const char* const bigInt, const int length, const int n, int* resultLen)
 {
 	if(n < 0 || n > 10)
@@ -559,24 +597,181 @@ char* bigIntMultiple(const char* const lhs, const int lhsLength, const char* con
 	return result;
 }
 
-char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen)
+char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen, char* modRes, int* modResLen)
 {
-/*
- * 12345/12 = 1000 + 20 + 8 ...9
- * = 1028 ...9
- *which can extract to 
- *  12345 - 1000*12 = 345
- *  345 - 10*12*2 = 105
- *  105 - 12*8 = 9
- * ***/
+	if(isZero(rhs, rhsLength) == 0)
+	{
+		//error, devide by zero
+		*resultLen = 0;
+		modRes = NULL;
+		*modResLen = 0;
+		return NULL;
+	}
+
+	if(isZero(lhs, lhsLength) == 0)
+	{
+		*resultLen = 1;
+		modRes = getIntZero();
+		*modResLen = 1;
+		return getIntZero();
+	}
+
+	int possitiveLhs = isPossitive(lhs, lhsLength);
+	int possitiveRhs = isPossitive(rhs, rhsLength);
+	int resultPossitive = (possitiveLhs == 0 && possitiveRhs == 0) || (possitiveLhs == -1 && possitiveRhs == -1) ? 0 : -1; 
+	int newLhsLen = 0;
+	char* newLhs = bigIntAbs(lhs, lhsLength, &newLhsLen);
+	
+	if(newLhs == NULL || newLhsLen == 0)
+	{
+		ROCKY_SAFE_DELETE(newLhs);
+		*resultLen = 0;
+		modRes = NULL;
+		*modResLen = 0;
+		return NULL;
+	}
+	
+	int newRhsLen = 0;
+	char* newRhs = bigIntAbs(rhs, rhsLength, &newRhsLen);
+	if(newRhs == NULL || newRhsLen == 0)
+	{
+		ROCKY_SAFE_DELETE(newLhs);
+		ROCKY_SAFE_DELETE(newRhs);
+		*resultLen = 0;
+		modRes = NULL;
+		*modResLen = 0;
+		return NULL;
+	}
+
+	char* one = "1";
+	if(bigIntCompare(newRhs, newRhsLen, one, strlen(one)) == 0)
+	{
+		*modResLen = 1;
+		modRes = getIntZero();
+		//devid by 1, return lhs
+		if(resultPossitive == 0)//possitive
+			return bigIntCopy(newLhs, newLhsLen, resultLen);
+		else
+			return getOppositeNumber(newLhs, newLhsLen, resultLen);
+	}
+
+	//compare
+	int compare = bigIntCompare(newLhs, newLhsLen, newRhs, newRhsLen);
+	if(compare == 0)
+	{
+		*modResLen = 1;
+		modRes = getIntZero();
+		char* tmp = (char*) malloc(2);
+		tmp[0] = '1';
+		tmp[1] = '\0';
+		*resultLen = 1;
+		if(resultPossitive == -1)
+		{
+			char* tmp2 = getOppositeNumber(tmp, strlen(tmp), resultLen);
+			if(tmp2 != NULL)
+			{
+				ROCKY_SAFE_DELETE(tmp);
+				tmp = tmp2;
+			}
+		}
+		return tmp;
+	}else if(compare < 0)
+	{
+		modRes = bigIntCopy(newLhs, newLhsLen, modResLen);
+		if(modRes == NULL)
+		{
+			//TODO error
+		}	
+		*resultLen = 1;
+		return getIntZero();
+	}else
+	{
+		/* main process
+		 * 12345/12 = 1000 + 20 + 8 ...9
+		 * = 1028 ...9
+		 *which can extract to 
+		 *  12345 - 1000*12 = 345
+		 *  345 - 10*12*2 = 105
+		 *  105 - 12*8 = 9
+		 * ***/
+
+		int tmpLen = 0;
+		char* tmp = bigIntMutiTenPow(newRhs, newRhsLen, 1, &tmpLen);
+		int count = 1;
+		while(tmp!= NULL && bigIntCompare(newLhs, newLhsLen, tmp, tmpLen) >= 0)
+		{
+			char* tmp2 = bigIntMutiTenPow(tmp, tmpLen, 1, &tmpLen);
+			ROCKY_SAFE_DELETE(tmp);
+			tmp = tmp2;
+			++count;
+		}
+		
+		char* result = getIntZero();
+		*resultLen = 1;
+		int tmpResLen = 0;
+		char* tmpRes = bigIntMutiTenPow("1", 1, count, &tmpResLen);
+		while(--count >= 0)
+		{
+			char* tmp2 = bigIntDevideTen(tmp, tmpLen, &tmpLen);
+			if(tmp2 == NULL)
+				break;
+			ROCKY_SAFE_DELETE(tmp);
+			tmp = tmp2;
+
+			char* tmpRes2 = bigIntDevideTen(tmpRes, tmpResLen, &tmpResLen);
+			if(tmpRes2 == NULL)
+				break;
+			ROCKY_SAFE_DELETE(tmpRes2);
+			tmpRes = tmpRes2;
+			
+			while(bigIntCompare(newLhs, newLhsLen, tmp, tmpLen) > 0)
+			{
+				int tmpNewLhsLen = 0;
+				char* tmpNewLhs = bigIntSub(newLhs, newLhsLen, tmp, tmpLen, &tmpNewLhsLen);
+				if(tmpNewLhs == NULL)
+					break;
+				ROCKY_SAFE_DELETE(newLhs);
+				newLhs = tmpNewLhs;
+				newLhsLen = tmpNewLhsLen;
+				
+				int tmpResultLen = 0;
+				char* tmpResult = bigIntAdd(result, *resultLen, tmpRes, tmpResLen, &tmpResultLen);
+				if(tmpResult == NULL)
+					break;
+				ROCKY_SAFE_DELETE(result);
+				result = tmpResult;
+				*resultLen = tmpResultLen;
+			}
+		}
+		if(count >= 0)//error occurred
+		{
+			*resultLen = 0;
+			*modResLen = 0;
+			modRes = NULL;
+			return NULL;
+		}else
+		{
+			if(isZero(newLhs, newLhsLen) == 0)
+			{
+				*modResLen = 1;
+				modRes = getIntZero();
+			}else
+			{
+				modRes = bigIntCopy(newLhs, newLhsLen, modResLen);
+			}
+		}
+		if(resultPossitive == -1)
+		{
+			char* tmp = getOppositeNumber(result, *resultLen, resultLen);
+			ROCKY_SAFE_DELETE(result);
+			result = tmp;
+		}
+		return result;
+	}
 
 	return NULL;
 }
 
-char* bigIntMod(char* lhs, int lhsLength, char* rhs, int rhsLength, int* resultLen)
-{
-	return NULL;
 
-}
 
 

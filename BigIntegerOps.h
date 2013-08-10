@@ -2,6 +2,9 @@
 #define __BIG_INTEGER_OPERATIONS_H__
 /**Author: Wang XiaoYuan*/
 #define max(a,b) (a) >= (b) ? (a) : (b)
+
+#define ROCKY_SAFE_DELETE(ptr) {if(ptr) {free(ptr); ptr = NULL; } }
+
 /**check if the predicted string is a integer or not*/
 int isInteger(const char* const bigInt, const int length);
 
@@ -11,6 +14,10 @@ int isPossitive(const char* const bigInt, const int length);
 
 /**check if the big integer is zero*/
 int isZero(const char* const bigInt, const int length);
+
+/*copy an big integer
+ * @warn the number shoud be valid*/
+char* bigIntCopy(const char* const bigInt, const int length, int* targetLength);
 
 /**Get opposite number of an integer, e.g. 1 -> -1
  * @warn the number should be valid*/
@@ -26,6 +33,13 @@ char* getIntZero();
 /**retrun the integer * 10^n
  * @warn assume the input integer is valid*/
 char* bigIntMutiTenPow(const char* const bigInt, const int length, int powN, int* resultLen);
+
+/**
+ * return the integer / 10
+ * @warn assume the input integer is valid
+ * */
+char* bigIntDevideTen(const char* const bigInt, const int length, int* resultLen);
+
 /**compares two big integers, and return the result
  * < -1
  * = 0
@@ -55,11 +69,6 @@ char* bigIntMultiple(const char* const lhs, const int lhsLength, const char* con
 /**
  * return two big integers' devision result, and put result length into resultLen
  * */
-char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen);
-
-/**
- * return two big integers' mod result, and put result length into resultLen
- * */
-char* bigIntMod(char* lhs, int lhsLength, char* rhs, int rhsLength, int* resultLen);
+char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen, char* modRes, int* modResLen);
 
 #endif
