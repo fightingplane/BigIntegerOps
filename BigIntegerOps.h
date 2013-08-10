@@ -69,6 +69,6 @@ char* bigIntMultiple(const char* const lhs, const int lhsLength, const char* con
 /**
  * return two big integers' devision result, and put result length into resultLen
  * */
-char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen, char* modRes, int* modResLen);
+char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen, char** modRes, int* modResLen);
 
 #endif

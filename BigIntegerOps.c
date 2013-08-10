@@ -142,9 +142,22 @@ int bigIntCompare(const char* const lhs, const int lhsLength, const char* const 
 		}
 
 		if(0 == possitiveA && 0 == possitiveB)
-			retVal = strcmp(newLhs, newRhs);
+		{
+			if(newLhsLength < newRhsLength)
+				retVal = -1;
+			else if(newLhsLength > newRhsLength)
+				retVal = 1;
+			else	
+				retVal = strcmp(newLhs, newRhs);
+		}
 		else if(!possitiveA && !possitiveB)
+		{
+			if(newLhsLength < newRhsLength)
+				retVal = 1;
+			else if(newLhsLength > newRhsLength)
+				retVal = -1;
 			retVal = strcmp(newRhs, newLhs);
+		}
 	}while(0);
 
 	if(newLhs) free(newLhs);
@@ -211,7 +224,7 @@ char* getOppositeNumber(const char* const bigInt, const int length, int* resultL
 	char* absInt = bigIntAbs(bigInt, length, &absLen);
 	if(possitive == 0)
 	{
-		char* result = (char*) malloc(absLen + 1);
+		char* result = (char*) malloc(absLen + 2);
 		if(result == NULL)
 		{	
 			printf("unable to alloc more memory");
@@ -220,8 +233,8 @@ char* getOppositeNumber(const char* const bigInt, const int length, int* resultL
 		}
 		*resultLen = absLen + 1;
 		result[0] = '-';
-		memcpy(result + 1, bigInt, absLen);
-		result[absLen] = '\0';
+		memcpy(result + 1, absInt, absLen);
+		result[*resultLen] = '\0';
 		free(absInt);
 		return result;
 	}else
@@ -276,7 +289,7 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 		}
 		else
 		{
-			if((carry = bitNum <= -10 ? -1 : 0) == -1)
+			if((carry = bitNum == -1 ? -1 : 0) == -1)
 				bitNum += 10;
 		}
 		res[index] = '0' + bitNum;
@@ -343,7 +356,11 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 		else resultSymbol = -1;
 	}
 
-	*resultLen = SIZE_MAX - (index + 1) + (resultSymbol == 0 ? 0 : 1);//index catch up
+	//find the first unzero index, trim the leading zeros
+	while(index < SIZE_MAX -1 && (res[index] == '0' || res[index] == '\0'))
+		++index;
+
+	*resultLen = SIZE_MAX - index + (resultSymbol == 0 ? 0 : 1);//index catch up
 	char* result = (char*) malloc(*resultLen + 1);
 	if(!result) 
 	{
@@ -357,9 +374,9 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 	if(resultSymbol == -1)
 	{
 		result[0] = '-';
-		memcpy(result + 1, res + index + 1, *resultLen - 1);
+		memcpy(result + 1, res + index, *resultLen - 1);
 	}else
-		memcpy(result, res + index + 1, *resultLen);
+		memcpy(result, res + index, *resultLen);
 	result[*resultLen] = '\0';
 	return result;
 }
@@ -420,14 +437,14 @@ char* bigIntDevideTen(const char* const bigInt, const int length, int* resultLen
 	}
 
 	*resultLen = length - 1;
-	char* result = (char*) malloc(length);
+	char* result = (char*) malloc(*resultLen + 1);
 	if(result == NULL)
 	{
 		*resultLen = 1;
 		return NULL;
 	}
-	memcpy(result, bigInt, length -1);
-	result[length] = '\0';
+	memcpy(result, bigInt, *resultLen);
+	result[*resultLen] = '\0';
 	return result;
 }
 
@@ -597,13 +614,13 @@ char* bigIntMultiple(const char* const lhs, const int lhsLength, const char* con
 	return result;
 }
 
-char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen, char* modRes, int* modResLen)
+char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const rhs, const int rhsLength, int* resultLen, char** modRes, int* modResLen)
 {
 	if(isZero(rhs, rhsLength) == 0)
 	{
 		//error, devide by zero
 		*resultLen = 0;
-		modRes = NULL;
+		*modRes = NULL;
 		*modResLen = 0;
 		return NULL;
 	}
@@ -611,7 +628,7 @@ char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const
 	if(isZero(lhs, lhsLength) == 0)
 	{
 		*resultLen = 1;
-		modRes = getIntZero();
+		*modRes = getIntZero();
 		*modResLen = 1;
 		return getIntZero();
 	}
@@ -626,7 +643,7 @@ char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const
 	{
 		ROCKY_SAFE_DELETE(newLhs);
 		*resultLen = 0;
-		modRes = NULL;
+		*modRes = NULL;
 		*modResLen = 0;
 		return NULL;
 	}
@@ -638,7 +655,7 @@ char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const
 		ROCKY_SAFE_DELETE(newLhs);
 		ROCKY_SAFE_DELETE(newRhs);
 		*resultLen = 0;
-		modRes = NULL;
+		*modRes = NULL;
 		*modResLen = 0;
 		return NULL;
 	}
@@ -647,7 +664,7 @@ char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const
 	if(bigIntCompare(newRhs, newRhsLen, one, strlen(one)) == 0)
 	{
 		*modResLen = 1;
-		modRes = getIntZero();
+		*modRes = getIntZero();
 		//devid by 1, return lhs
 		if(resultPossitive == 0)//possitive
 			return bigIntCopy(newLhs, newLhsLen, resultLen);
@@ -660,7 +677,7 @@ char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const
 	if(compare == 0)
 	{
 		*modResLen = 1;
-		modRes = getIntZero();
+		*modRes = getIntZero();
 		char* tmp = (char*) malloc(2);
 		tmp[0] = '1';
 		tmp[1] = '\0';
@@ -677,8 +694,8 @@ char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const
 		return tmp;
 	}else if(compare < 0)
 	{
-		modRes = bigIntCopy(newLhs, newLhsLen, modResLen);
-		if(modRes == NULL)
+		*modRes = bigIntCopy(newLhs, newLhsLen, modResLen);
+		if(*modRes == NULL)
 		{
 			//TODO error
 		}	
@@ -706,9 +723,9 @@ char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const
 			++count;
 		}
 		
-		char* result = getIntZero();
-		*resultLen = 1;
-		int tmpResLen = 0;
+		char* result = getIntZero();//save the result of division
+		*resultLen = 1;//save the result length
+		int tmpResLen = 0;//base result unit
 		char* tmpRes = bigIntMutiTenPow("1", 1, count, &tmpResLen);
 		while(--count >= 0)
 		{
@@ -721,7 +738,7 @@ char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const
 			char* tmpRes2 = bigIntDevideTen(tmpRes, tmpResLen, &tmpResLen);
 			if(tmpRes2 == NULL)
 				break;
-			ROCKY_SAFE_DELETE(tmpRes2);
+			ROCKY_SAFE_DELETE(tmpRes);
 			tmpRes = tmpRes2;
 			
 			while(bigIntCompare(newLhs, newLhsLen, tmp, tmpLen) > 0)
@@ -747,17 +764,17 @@ char* bigIntDevide(const char* const lhs, const int lhsLength, const char* const
 		{
 			*resultLen = 0;
 			*modResLen = 0;
-			modRes = NULL;
+			*modRes = NULL;
 			return NULL;
 		}else
 		{
 			if(isZero(newLhs, newLhsLen) == 0)
 			{
 				*modResLen = 1;
-				modRes = getIntZero();
+				*modRes = getIntZero();
 			}else
 			{
-				modRes = bigIntCopy(newLhs, newLhsLen, modResLen);
+				*modRes = bigIntCopy(newLhs, newLhsLen, modResLen);
 			}
 		}
 		if(resultPossitive == -1)

@@ -89,5 +89,12 @@ int main(void)
 	else
 		printf("failed to process operation\n");
 
+	char* divideLhs = "12345";
+	char* divideRhs = "12";
+	char* mod = NULL;
+	int divideResLen = 0;
+	int modLen = 0;
+	bigIntDevide(divideLhs, strlen(divideLhs), divideRhs, strlen(divideRhs), &divideResLen, &mod, &modLen);
+
 	return 0;
 }

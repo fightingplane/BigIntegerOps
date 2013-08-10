@@ -80,6 +80,23 @@ START_TEST(test_integerMuti)
 }
 END_TEST
 
+START_TEST(test_integerDivide)
+{
+	char* a = "12345";
+	char* b = "12";
+	char* c = NULL;
+	int len = 0;
+	int modLen = 0;
+	char* res1 = bigIntDevide(a, strlen(a), b, strlen(b), &len, &c, &modLen);
+	fail_unless(res1 != NULL, "result should not null");
+	fail_unless(strcmp(res1, "1028") == 0, "result should == 1028");
+	fail_unless(c != NULL, "mod result should not null");
+	fail_unless(strcmp(c, "9")== 0, "mod result should == 9");
+	free(res1);
+	free(c);
+}
+END_TEST
+
 Suite* bigInteger_suit(void)
 {
 	Suite *s = suite_create("Test_BigInteger");
@@ -93,6 +110,7 @@ Suite* bigInteger_suit(void)
 	tcase_add_test(tc_calc, test_integerMutiTenPow);
 	tcase_add_test(tc_calc, test_integerMutiN);
 	tcase_add_test(tc_calc, test_integerMuti);
+	tcase_add_test(tc_calc, test_integerDivide);
 
 	suite_add_tcase(s, tc_core);
 	suite_add_tcase(s, tc_calc);
