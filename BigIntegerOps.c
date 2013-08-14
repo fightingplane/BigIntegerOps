@@ -289,7 +289,7 @@ char* bigIntAdd(const char* const lhs, const int lhsLength, const char* const rh
 		}
 		else
 		{
-			if((carry = bitNum == -1 ? -1 : 0) == -1)
+			if((carry = bitNum <= 0 ? -1 : 0) == -1)
 				bitNum += 10;
 		}
 		res[index] = '0' + bitNum;
