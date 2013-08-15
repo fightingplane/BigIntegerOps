@@ -35,7 +35,7 @@ int isInteger(const char* const bigInt, const int length)
 
 int isZero(const char* const bigInt, const int length)
 {
-	if(NULL == bigInt || 0 <= length) return -1;
+	if(NULL == bigInt || 0 >= length) return -1;
 	//get the first non-zero position
 	int i = 0;
 	for( ; i < length; ++i)

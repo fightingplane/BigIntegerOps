@@ -18,6 +18,7 @@ int main(void)
 		op = getchar();
 		scanf("%s", rhs);
 		getchar();
+		getchar();
 		doCalc(lhs, strlen(lhs), rhs, strlen(rhs), op);
 		memset(lhs, 0, 400);
 		memset(rhs, 0, 400);
@@ -83,7 +84,7 @@ void doCalc(const char* const lhs, const unsigned int lhsLen, const char* rhs, c
 	printf("Run Time:%f(seconds)\n", (float)t/CLOCKS_PER_SEC);
 	if(res == 0)//false;
 	{	
-		printf("Operation Failed\n");
+		printf("Operation Failed\n\n");
 	}
 	if(res == 1)//success
 	{

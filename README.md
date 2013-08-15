@@ -21,17 +21,19 @@ You can add test cases in the $PROJECT/test dir
 
 For real data test:
 	run ./BigInteger after build
-input 3 lines:
+input 4 lines:
 	operator1
 	op
 	operator2
+	<CR>
 E.G
 	1
 	+
 	1
-and out put 2 line:
+and out put 3 line:
 	time calculated in seconds
 	result
+	<CR>
 e.g.
 	Run Time:0.000000(seconds)
     Result:2
